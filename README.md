@@ -1,0 +1,2 @@
+# konflict
+war is bad
