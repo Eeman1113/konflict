@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Konflict - News Digest</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Lora:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Lora', serif;
+            background-color: #f8f8f7; 
+            color: #2c2c2c; 
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            overflow-x: hidden; /* Prevent horizontal scrollbars from animations */
+        }
+        .header-main-title {
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            letter-spacing: 0.01em; 
+            color: #1a1a1a; 
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #333;
+            display: inline-block; 
+        }
+        .news-article-card {
+            background-color: #ffffff; 
+            border: 1px solid #dddddd; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+            opacity: 0; /* Initially hidden for animation */
+            transform: translateY(20px); /* Start slightly lower for animation */
+            /* transition properties will be handled by the animation itself for entry */
+        }
+        /* Staggered card entry animation */
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .news-article-card.animate-in {
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+
+        .news-article-card:hover {
+            border-color: #bbbbbb;
+            transform: translateY(-5px) scale(1.01); /* Combined hover effect */
+            box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+            transition: border-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease; /* Ensure hover transitions are smooth */
+        }
+        .news-image-container {
+            overflow: hidden; 
+        }
+        .news-image {
+            object-fit: cover;
+            height: 230px; 
+            width: 100%;
+            filter: grayscale(100%);
+            transition: filter 0.5s ease-in-out, transform 0.5s ease-in-out; /* Increased duration */
+        }
+        .news-article-card:hover .news-image {
+            filter: grayscale(0%);
+            transform: scale(1.07); /* More pronounced zoom */
+        }
+
+        .article-content-title {
+            font-family: 'Playfair Display', serif;
+            font-weight: 700; 
+            color: #222222; 
+            letter-spacing: 0.005em;
+            line-height: 1.3; 
+        }
+        .article-content-summary {
+            font-size: 0.925rem; 
+            line-height: 1.7; 
+            color: #454545;
+            font-weight: 400;
+        }
+        .article-content-meta {
+            font-size: 0.78rem; 
+            color: #6b6b6b;
+            font-weight: 500; 
+        }
+        .article-content-category-tag {
+            font-size: 0.725rem;
+            font-family: 'Lora', serif; 
+            background-color: #f0f0f0; 
+            color: #444; 
+            padding: 0.25rem 0.65rem; 
+            border-radius: 3px; 
+            font-weight: 600; 
+            border: 1px solid #dcdcdc;
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+        .news-article-card:hover .article-content-category-tag {
+            background-color: #333; 
+            color: #fff; 
+            border-color: #1a1a1a; 
+        }
+        .article-content-read-more {
+            font-size: 0.875rem;
+            font-weight: 600; 
+            color: #555; 
+            text-decoration: none; 
+            position: relative; /* For pseudo-element underline */
+            padding-bottom: 3px; /* Space for underline */
+            transition: color 0.3s ease;
+        }
+        .article-content-read-more::after { /* Animated underline */
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 1.5px; /* Thicker underline */
+            bottom: 0;
+            left: 0;
+            background-color: #1a202c; /* Darker underline */
+            transition: width 0.35s ease-out;
+        }
+        .news-article-card:hover .article-content-read-more {
+            color: #1a202c; 
+        }
+        .news-article-card:hover .article-content-read-more::after {
+            width: 100%;
+        }
+
+        .refresh-action-button {
+            font-family: 'Lora', serif; 
+            background-color: #333; 
+            color: #f0f0f0; 
+            border: 1px solid #1a1a1a; 
+            padding: 0.7rem 1.75rem; 
+            border-radius: 3px; 
+            font-weight: 600; 
+            font-size: 0.9rem;
+            letter-spacing: 0.03em;
+            transition: background-color 0.3s ease, color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+        }
+        .refresh-action-button:hover {
+            background-color: #1a1a1a; 
+            color: #fff;
+            transform: translateY(-2px) scale(1.02); /* More pronounced hover */
+            box-shadow: 0 5px 10px rgba(0,0,0,0.15);
+        }
+        .refresh-action-button:active {
+            transform: translateY(0px) scale(1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+        }
+
+        .indicator-text {
+            color: #5a5a5a;
+            font-weight: 500;
+            font-family: 'Lora', serif;
+        }
+        /* Loading indicator animation */
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+        #loadingIndicator.animated {
+            animation: pulse 1.5s infinite ease-in-out;
+        }
+
+        .error-text {
+            color: #b91c1c; 
+            font-weight: 500;
+            font-family: 'Lora', serif;
+        }
+        .footer-text {
+            color: #777;
+            font-size: 0.825rem;
+            font-family: 'Lora', serif;
+        }
+        .footer-text a {
+            color: #444;
+            text-decoration: none;
+        }
+        .footer-text a:hover {
+            text-decoration: underline;
+        }
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #ececec; }
+        ::-webkit-scrollbar-thumb { background: #c5c5c5; border-radius: 4px;}
+        ::-webkit-scrollbar-thumb:hover { background: #b0b0b0; }
+    </style>
+</head>
+<body>
+
+    <header class="py-12">
+        <div class="container mx-auto px-6 text-center">
+            <h1 class="header-main-title text-4xl md:text-5xl">Konflict</h1>
+        </div>
+    </header>
+
+    <div class="container mx-auto px-6 flex justify-center mb-12">
+         <button id="refreshNews" class="refresh-action-button">
+            Refresh Dispatches
+        </button>
+    </div>
+
+    <main class="container mx-auto px-6">
+        <div id="newsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-10">
+            </div>
+        <div id="loadingIndicator" class="text-center py-16 text-lg indicator-text" style="display: none;">
+            Gathering latest dispatches...
+        </div>
+        <div id="errorIndicator" class="text-center py-16 text-lg error-text" style="display: none;">
+            </div>
+    </main>
+
+    <footer class="text-center py-16 mt-20 border-t border-gray-300">
+        <p class="footer-text">&copy; <span id="currentYear"></span> Konflict. All Rights Reserved.</p>
+        <p class="footer-text mt-1">Content sourced via public RSS feeds.</p>
+    </footer>
+
+    <script>
+        const newsContainer = document.getElementById('newsContainer');
+        const refreshButton = document.getElementById('refreshNews');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const errorIndicator = document.getElementById('errorIndicator');
+        const currentYearSpan = document.getElementById('currentYear');
+        let autoUpdateInterval; 
+        const AUTO_UPDATE_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+
+        const RSS_FEED_URLS = [
+            "https://www.hindustantimes.com/feeds/rss/india-news/rssfeed.xml",
+            "https://timesofindia.indiatimes.com/rssfeeds/296589292.cms",
+            "https://feeds.bbci.co.uk/news/world/asia/rss.xml",
+            "https://www.aljazeera.com/xml/rss/all.xml",
+            "https://www.theguardian.com/world/rss",
+            "https://feeds.feedburner.com/ndtvnews-india",
+            "https://www.dawn.com/feeds/latest-news",
+            "https://feeds.reuters.com/reuters/topNews",
+            "https://www.apnews.com/APNews_World.rss",
+            "https://www.thehindu.com/news/national/feeder/default.rss",
+            "https://www.thenews.com.pk/rss/1/1",
+            "https://www.france24.com/en/rss"
+        ];
+
+        const PRIMARY_ENTITIES_INDIA = ["india", "indian"];
+        const PRIMARY_ENTITIES_PAKISTAN = ["pakistan", "pakistani", "pak"];
+        const SPECIFIC_CONFLICT_KEYWORDS = [
+            "kashmir", "loc", "line of control", "strike", "ceasefire", "sindoor", "pahalgam", 
+            "attack", "retaliation", "drone", "missile", "war", "conflict", "escalation",
+            "skirmish", "troops", "forces", "military", "defence", "border tension", "airstrike",
+            "shelling", "casualties", "diplomatic row", "insurgency"
+        ];
+
+        function stripHtml(html) {
+           if (!html) return "";
+           const doc = new DOMParser().parseFromString(html, 'text/html');
+           return doc.body.textContent || "";
+        }
+
+        function displayNews(articles) {
+            newsContainer.innerHTML = ''; 
+            if (!articles || articles.length === 0) {
+                newsContainer.innerHTML = '<p class="text-center col-span-full py-12 indicator-text">No dispatches matching the current focus found.</p>';
+                return;
+            }
+            articles.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
+            
+            articles.forEach((article, index) => { // Added index for staggered animation
+                const title = article.title || "Untitled Dispatch";
+                let summary = stripHtml(article.description || "No summary available.");
+                if (summary.length > 170) { 
+                    summary = summary.substring(0, 170) + "...";
+                }
+                const sourceName = article.feedTitle || article.author || "Unknown Correspondent";
+                const date = article.pubDate ? new Date(article.pubDate).toLocaleDateString() : "Undated";
+                let imageUrl = article.thumbnail || (article.enclosure && article.enclosure.link);
+                if (!imageUrl && article['media:content'] && article['media:content']['@url']) {
+                    imageUrl = article['media:content']['@url'];
+                } else if (!imageUrl && article['media:thumbnail'] && article['media:thumbnail']['@url']) {
+                    imageUrl = article['media:thumbnail']['@url'];
+                }
+                if (!imageUrl || typeof imageUrl !== 'string' || !imageUrl.startsWith('http')) {
+                    const placeholderText = title && title.length > 3 ? title.substring(0,12) : "Dispatch";
+                    imageUrl = `https://placehold.co/600x400/e0e0e0/a0a0a0?text=${encodeURIComponent(placeholderText)}&font=Lora`; 
+                }
+
+                const category = (article.categories && article.categories.length > 0) ? stripHtml(article.categories[0]) : (stripHtml(article.feedTitle) || "General Report");
+
+                const articleElement = document.createElement('article'); // Create element with JS to control animation class
+                articleElement.className = 'news-article-card flex flex-col';
+                articleElement.innerHTML = `
+                    <div class="news-image-container">
+                        <img src="${imageUrl}" alt="${title}" class="news-image">
+                    </div>
+                    <div class="p-6 md:p-7 flex flex-col flex-grow">
+                        <h2 class="article-content-title text-xl md:text-2xl mb-3">${title}</h2>
+                        <p class="article-content-summary mb-5 flex-grow">${summary}</p>
+                        <div class="mt-auto">
+                            <div class="article-content-meta flex justify-between items-center mb-4">
+                                <span>${sourceName}</span>
+                                <span>${date}</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="article-content-category-tag">${category.length > 22 ? category.substring(0,20) + '...' : category}</span>
+                                <a href="${article.link}" target="_blank" rel="noopener noreferrer" 
+                                   class="article-content-read-more"> 
+                                    Read Full Report &rarr;
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                newsContainer.appendChild(articleElement);
+
+                // Staggered animation
+                setTimeout(() => {
+                    articleElement.classList.add('animate-in');
+                }, index * 100); // 100ms delay between each card
+            });
+        }
+
+        async function fetchSingleFeed(rssUrl) {
+            const encodedRssUrl = encodeURIComponent(rssUrl);
+            const finalApiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodedRssUrl}`;
+            try {
+                const response = await fetch(finalApiUrl);
+                if (!response.ok) {
+                    console.warn(`Failed to fetch ${rssUrl}. Status: ${response.status}, ${response.statusText}`);
+                    return { error: `Failed to fetch ${rssUrl}. Status: ${response.status}`, items: [] };
+                }
+                const data = await response.json();
+                if (data.status === 'ok' && data.items) {
+                    return { items: data.items.map(item => ({ ...item, feedTitle: data.feed.title || 'Unknown Feed' })) };
+                } else {
+                    console.warn(`Could not retrieve items from ${rssUrl}. rss2json status: ${data.status}, Message: ${data.message}`);
+                    return { error: `Could not retrieve items from ${rssUrl}. Message: ${data.message || data.status}`, items: [] };
+                }
+            } catch (networkError) {
+                 console.error(`Network error fetching ${rssUrl}:`, networkError);
+                 return { error: `Network error fetching ${rssUrl}: ${networkError.message}`, items: [] };
+            }
+        }
+
+        function isArticleRelevant(articleText) {
+            const textLower = articleText.toLowerCase();
+            const mentionsIndia = PRIMARY_ENTITIES_INDIA.some(term => textLower.includes(term));
+            const mentionsPakistan = PRIMARY_ENTITIES_PAKISTAN.some(term => textLower.includes(term));
+            const mentionsConflictTerm = SPECIFIC_CONFLICT_KEYWORDS.some(term => textLower.includes(term));
+            if (mentionsIndia && mentionsPakistan) return true;
+            if (mentionsIndia && mentionsConflictTerm) return true;
+            if (mentionsPakistan && mentionsConflictTerm) return true;
+            return false;
+        }
+
+        async function fetchNews(isAutoUpdate = false) {
+            if (!isAutoUpdate) {
+                loadingIndicator.style.display = 'block';
+                loadingIndicator.classList.add('animated'); // Add animation class
+            }
+            if (!isAutoUpdate) {
+                 newsContainer.innerHTML = ''; 
+            }
+            errorIndicator.style.display = 'none';
+            
+            if (autoUpdateInterval) {
+                clearInterval(autoUpdateInterval);
+            }
+
+            let allArticles = [];
+            let hasFetchingErrors = false;
+            const results = await Promise.allSettled(RSS_FEED_URLS.map(url => fetchSingleFeed(url)));
+            results.forEach((result, index) => {
+                if (result.status === 'fulfilled' && result.value && !result.value.error && result.value.items) {
+                    allArticles = allArticles.concat(result.value.items);
+                } else {
+                    const reason = (result.value && result.value.error) ? result.value.error : (result.reason ? result.reason.message : 'Unknown error');
+                    if (!isAutoUpdate) { 
+                        console.error(`Error processing feed ${RSS_FEED_URLS[index]}:`, reason);
+                    }
+                    hasFetchingErrors = true;
+                }
+            });
+            const filteredArticles = allArticles.filter(article => {
+                const combinedText = `${article.title || ""} ${stripHtml(article.description) || ""}`;
+                return isArticleRelevant(combinedText);
+            });
+
+            let needsDomUpdate = !isAutoUpdate;
+            if (isAutoUpdate) {
+                if (newsContainer.children.length !== filteredArticles.length || hasFetchingErrors) {
+                    needsDomUpdate = true;
+                } else {
+                    if (filteredArticles.length > 0 && newsContainer.querySelector('.article-content-title') &&
+                        newsContainer.querySelector('.article-content-title').textContent !== filteredArticles[0].title) {
+                        needsDomUpdate = true;
+                    }
+                }
+            }
+
+            if (needsDomUpdate) {
+                if (isAutoUpdate) { 
+                    newsContainer.innerHTML = ''; // Clear before adding new items for auto-update
+                }
+                if (hasFetchingErrors) {
+                    if (allArticles.length === 0 && filteredArticles.length === 0) {
+                        errorIndicator.textContent = "Failed to retrieve dispatches from all sources. Please check connection or try later.";
+                        errorIndicator.style.display = 'block';
+                    } else { 
+                        if (filteredArticles.length === 0 && allArticles.length === 0) {
+                        } else if (filteredArticles.length === 0 && allArticles.length > 0) {
+                             errorIndicator.style.display = 'none';
+                        } else if (filteredArticles.length > 0) {
+                             errorIndicator.style.display = 'none';
+                        }
+                    }
+                } else {
+                    errorIndicator.style.display = 'none';
+                }
+
+                if (filteredArticles.length > 0) {
+                    displayNews(filteredArticles); // This will now handle staggered animation
+                } else {
+                    if (!hasFetchingErrors || (hasFetchingErrors && allArticles.length > 0)) { 
+                        newsContainer.innerHTML = '<p class="text-center col-span-full py-12 indicator-text">No dispatches matching the current focus found from available sources.</p>';
+                    }
+                }
+            }
+            
+            if (!isAutoUpdate) {
+                loadingIndicator.style.display = 'none';
+                loadingIndicator.classList.remove('animated'); // Remove animation class
+            }
+
+            autoUpdateInterval = setInterval(() => fetchNews(true), AUTO_UPDATE_INTERVAL_MS);
+        }
+
+        refreshButton.addEventListener('click', () => fetchNews(false)); 
+        
+        if (currentYearSpan) {
+            currentYearSpan.textContent = new Date().getFullYear();
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => fetchNews(false));
+    </script>
+
+</body>
+</html>
